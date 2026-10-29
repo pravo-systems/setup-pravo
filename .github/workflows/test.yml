@@ -26,7 +26,8 @@ jobs:
       - name: The binary reports the version that was installed
         shell: bash
         run: |
-          out=$(pravo version | head -n 1)
+          all=$(pravo version)
+          out=$(printf '%s\n' "$all" | head -n 1)
           echo "$out"
           [ "$out" = "pravo ${{ steps.pravo.outputs.version }}" ]
   checksum:
