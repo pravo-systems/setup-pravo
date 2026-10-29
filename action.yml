@@ -1,0 +1,33 @@
+name: Setup pravo
+description: Install the pravo CLI from a GitHub release, verify its checksum and put it on PATH.
+author: pravo-systems
+branding:
+  icon: download
+  color: gray-dark
+inputs:
+  version:
+    description: "A version such as 0.1.0 or 0.1.0-rc9, or latest for the newest full release. A pre-release installs only when named."
+    default: latest
+  token:
+    description: Token for the GitHub API, which resolves latest and avoids rate limits.
+    default: ${{ github.token }}
+  verify-attestation:
+    description: "Also check the signed provenance attestation with gh attestation verify."
+    default: "false"
+outputs:
+  version:
+    description: The version that was installed.
+    value: ${{ steps.install.outputs.version }}
+  path:
+    description: The directory that holds the pravo binary.
+    value: ${{ steps.install.outputs.path }}
+runs:
+  using: composite
+  steps:
+    - id: install
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+        GH_TOKEN: ${{ inputs.token }}
+        VERIFY: ${{ inputs.verify-attestation }}
+      run: bash "$GITHUB_ACTION_PATH/install.sh"

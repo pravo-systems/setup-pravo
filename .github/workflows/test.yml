@@ -1,0 +1,44 @@
+name: Test
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  install:
+    name: ${{ matrix.os }} ${{ matrix.version }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+        version: [latest, 0.1.0-rc9]
+    steps:
+      - uses: actions/checkout@v4
+      - id: pravo
+        uses: ./
+        with:
+          version: ${{ matrix.version }}
+          verify-attestation: ${{ matrix.os != 'windows-latest' }}
+      - name: The binary reports the version that was installed
+        shell: bash
+        run: |
+          out=$(pravo version | head -n 1)
+          echo "$out"
+          [ "$out" = "pravo ${{ steps.pravo.outputs.version }}" ]
+  checksum:
+    name: A wrong checksum fails
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unknown version fails
+        id: bad
+        uses: ./
+        continue-on-error: true
+        with:
+          version: 0.0.0-nope
+      - run: '[ "${{ steps.bad.outcome }}" = failure ]'
